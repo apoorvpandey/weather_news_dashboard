@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:weather_news_dashboard/core/config/app_environment.dart';
 
-import '../model/forecast_model.dart';
-import '../model/weather_model.dart';
+import '../../model/forecast_model.dart';
+import '../../model/weather_model.dart';
 
 class WeatherRemoteDataSource {
   final Dio dio;

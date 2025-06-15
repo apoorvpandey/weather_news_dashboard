@@ -1,4 +1,4 @@
-import '../../data/datasources/weather_remote_datasource.dart';
+import '../../data/datasources/remote/weather_remote_datasource.dart';
 import '../../data/model/forecast_model.dart';
 import '../../data/model/weather_model.dart';
 import '../../domain/entities/weather.dart';
