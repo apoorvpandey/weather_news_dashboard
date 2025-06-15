@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/weather_provider/weather_provider.dart';
+import '../widgets/current_weather_card.dart';
+import '../widgets/error_message.dart';
+import '../widgets/forecast_list.dart';
+import '../widgets/loading_indicator.dart';
+import '../widgets/weather_search_bar.dart';
 
 class WeatherPage extends StatefulWidget {
   const WeatherPage({super.key});
@@ -11,74 +16,100 @@ class WeatherPage extends StatefulWidget {
 }
 
 class _WeatherPageState extends State<WeatherPage> {
-  final cityController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+
+  @override
+  void dispose() {
+    _cityController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final weatherProvider = Provider.of<WeatherProvider>(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Weather')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      appBar: AppBar(
+        title: const Text('Weather Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.my_location),
+            tooltip: 'My Location',
+            onPressed: () {
+              weatherProvider.fetchWeatherByLocation();
+            },
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          if (weatherProvider.weather != null) {
+            if (_cityController.text.isNotEmpty) {
+              await weatherProvider.refreshWeatherAndForecast(
+                city: _cityController.text.trim(),
+              );
+            } else if (weatherProvider.weather != null) {
+              await weatherProvider.refreshWeatherAndForecast(
+                city: weatherProvider.weather?.cityName,
+              );
+            }
+          }
+        },
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            TextField(
-              controller: cityController,
-              decoration: const InputDecoration(labelText: 'Enter city'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final city = cityController.text.trim();
+            WeatherSearchBar(
+              controller: _cityController,
+              onSearch: () {
+                final city = _cityController.text.trim();
                 if (city.isNotEmpty) {
-                  Provider.of<WeatherProvider>(
-                    context,
-                    listen: false,
-                  ).fetchWeather(city);
-                }
-              },
-              child: const Text('Get Weather'),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              icon: Icon(Icons.my_location),
-              label: Text('My Location Weather'),
-              onPressed: () {
-                Provider.of<WeatherProvider>(context, listen: false)
-                    .fetchWeatherByLocation();
-              },
-            ),
-            const SizedBox(height: 32),
-            Consumer<WeatherProvider>(
-              builder: (context, provider, child) {
-                if (provider.state == WeatherState.loading) {
-                  return const CircularProgressIndicator();
-                } else if (provider.state == WeatherState.loaded &&
-                    provider.weather != null) {
-                  final weather = provider.weather!;
-                  return Column(
-                    children: [
-                      Text(
-                        weather.cityName,
-                        style: const TextStyle(fontSize: 24),
-                      ),
-                      Text('${weather.temperature} °C'),
-                      Text(weather.description),
-                      Image.network(
-                        'https://openweathermap.org/img/wn/${weather.icon}@2x.png',
-                        width: 80,
-                        height: 80,
-                      ),
-                    ],
-                  );
-                } else if (provider.state == WeatherState.error) {
-                  return Text('Error: ${provider.error}');
-                } else {
-                  return const Text('Enter a city to get weather');
+                  weatherProvider.fetchWeather(city);
                 }
               },
             ),
+            const SizedBox(height: 24),
+            _buildCurrentWeather(weatherProvider),
+            const SizedBox(height: 32),
+            const Text(
+              '5-Day Forecast',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            _buildForecast(weatherProvider),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildCurrentWeather(WeatherProvider provider) {
+    switch (provider.state) {
+      case WeatherState.initial:
+        return const Center(child: Text('Enter a city or use your location.'));
+      case WeatherState.loading:
+        return const LoadingIndicator();
+      case WeatherState.error:
+        return ErrorMessage(provider.error ?? 'An error occurred');
+      case WeatherState.loaded:
+        return CurrentWeatherCard(weather: provider.weather!);
+    }
+  }
+
+  Widget _buildForecast(WeatherProvider provider) {
+    switch (provider.forecastState) {
+      case WeatherState.initial:
+        return const Center(child: Text('No forecast yet.'));
+      case WeatherState.loading:
+        return const LoadingIndicator();
+      case WeatherState.error:
+        return ErrorMessage(
+          provider.forecastError ?? 'Could not load forecast',
+        );
+      case WeatherState.loaded:
+        if (provider.forecast.isEmpty) {
+          return const Center(child: Text('No forecast data found.'));
+        }
+        return ForecastList(forecast: provider.forecast);
+    }
   }
 }

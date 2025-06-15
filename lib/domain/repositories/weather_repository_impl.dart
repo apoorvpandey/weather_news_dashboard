@@ -1,7 +1,9 @@
 import '../../data/datasources/weather_remote_datasource.dart';
+import '../../data/model/forecast_model.dart';
 import '../../data/model/weather_model.dart';
 import '../../domain/entities/weather.dart';
 import '../../domain/repositories/weather_repository.dart';
+import '../entities/forecast_item.dart';
 
 class WeatherRepositoryImpl implements WeatherRepository {
   final WeatherRemoteDataSource remoteDataSource;
@@ -31,5 +33,40 @@ class WeatherRepositoryImpl implements WeatherRepository {
       icon: model.icon,
       dateTime: model.dateTime,
     );
+  }
+
+  @override
+  Future<List<ForecastItem>> get5DayForecast(String city) async {
+    final ForecastModel forecastModel = await remoteDataSource
+        .fetch5DayForecast(city);
+    return forecastModel.items
+        .map(
+          (item) => ForecastItem(
+            dateTime: item.dateTime,
+            temperature: item.temperature,
+            weatherDescription: item.weatherDescription,
+            icon: item.icon,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<List<ForecastItem>> get5DayForecastByCoordinates(
+    double lat,
+    double lon,
+  ) async {
+    final ForecastModel forecastModel = await remoteDataSource
+        .fetch5DayForecastByCoordinates(lat, lon);
+    return forecastModel.items
+        .map(
+          (item) => ForecastItem(
+            dateTime: item.dateTime,
+            temperature: item.temperature,
+            weatherDescription: item.weatherDescription,
+            icon: item.icon,
+          ),
+        )
+        .toList();
   }
 }
