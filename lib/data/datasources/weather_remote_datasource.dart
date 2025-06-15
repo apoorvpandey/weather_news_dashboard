@@ -20,4 +20,21 @@ class WeatherRemoteDataSource {
     );
     return WeatherModel.fromJson(response.data);
   }
+
+  Future<WeatherModel> fetchCurrentWeatherByCoordinates(
+    double lat,
+    double lon,
+  ) async {
+    final url = 'https://api.openweathermap.org/data/2.5/weather';
+    final response = await dio.get(
+      url,
+      queryParameters: {
+        'lat': lat,
+        'lon': lon,
+        'appid': AppEnvironment.openWeatherApiKey,
+        'units': 'metric',
+      },
+    );
+    return WeatherModel.fromJson(response.data);
+  }
 }

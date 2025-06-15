@@ -19,4 +19,17 @@ class WeatherRepositoryImpl implements WeatherRepository {
       dateTime: model.dateTime,
     );
   }
+
+  @override
+  Future<Weather> getCurrentWeatherByCoordinates(double lat, double lon) async {
+    final WeatherModel model = await remoteDataSource
+        .fetchCurrentWeatherByCoordinates(lat, lon);
+    return Weather(
+      cityName: model.cityName,
+      temperature: model.temperature,
+      description: model.description,
+      icon: model.icon,
+      dateTime: model.dateTime,
+    );
+  }
 }

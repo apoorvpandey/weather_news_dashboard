@@ -9,4 +9,8 @@ class GetCurrentWeather {
   Future<Weather> call(String city) {
     return repository.getCurrentWeather(city);
   }
+
+  Future<Weather> byCoordinates(double lat, double lon) {
+    return repository.getCurrentWeatherByCoordinates(lat, lon);
+  }
 }

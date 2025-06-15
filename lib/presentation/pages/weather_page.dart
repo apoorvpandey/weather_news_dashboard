@@ -38,6 +38,15 @@ class _WeatherPageState extends State<WeatherPage> {
               child: const Text('Get Weather'),
             ),
             const SizedBox(height: 32),
+            ElevatedButton.icon(
+              icon: Icon(Icons.my_location),
+              label: Text('My Location Weather'),
+              onPressed: () {
+                Provider.of<WeatherProvider>(context, listen: false)
+                    .fetchWeatherByLocation();
+              },
+            ),
+            const SizedBox(height: 32),
             Consumer<WeatherProvider>(
               builder: (context, provider, child) {
                 if (provider.state == WeatherState.loading) {
